@@ -4,7 +4,7 @@ let minSpace = 10;
 let inc = 8; // affects resolution of voronoi image
 let bg;
 var showCellNuc = true;
-var manhattanDistances = false;
+var manhattanDistances = true;
 
 function setup() {
   createCanvas(900, 600);
