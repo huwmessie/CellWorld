@@ -5,7 +5,7 @@ class Cell {
     this.color = color(random(40,120),random(120,190));
     this.offset = createVector();
     this.vel = createVector();
-    this.life = 0;
+    this.life = 1000;
   }
   
   draw(w) {

@@ -1,8 +1,8 @@
 let cells =[];
 let blobs =[];
 let maxSpace = 2000;
-let minSpace = 140;
-let inc = 15; // affects resolution of voronoi image
+let minSpace = 100;
+let inc = 12; // affects resolution of voronoi image
 let bg;
 var showCellNuc = false;
 var manhattanDistances = false;
@@ -125,9 +125,8 @@ function applyBlobs(bs,inc,from) {
       for (var i=0; i<bs.length; i++) {
         let bp = bs[i].cell.absPos();
         let d = cellDist(vec,bp);
-        if (d!=0) {total+=bs[i].cell.life/pow(d,2);}
+        if (d>0) {total+=bs[i].cell.life/pow(d,2);}
       }
-      print(total);
       if (total>1) {
         let c = color(255,0,0);
         writeColor(img, int(x/inc), int(y/inc), c);
