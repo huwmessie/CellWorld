@@ -4,7 +4,7 @@ let maxSpace = 2000;
 let minSpace = 90;
 let inc = 8; // affects resolution of voronoi image
 let bg;
-var showCellNuc = true;
+var showCellNuc = false;
 var manhattanDistances = false;
 
 function setup() {
