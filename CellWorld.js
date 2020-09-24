@@ -1,19 +1,23 @@
 let cells =[];
-let blobs =[];
+let blobs = [[],[],[]];
 let maxSpace = 2000;
 let minSpace = 100;
 let inc = 12; // affects resolution of voronoi image
 let bg;
 var showCellNuc = false;
 var manhattanDistances = false;
+var curColor;
+var curColorInd = 0;
+var colors;
 
 function setup() {
+  initColors();
   createCanvas(1280, 720);
   //createCanvas(640, 480);
   initCells(minSpace,maxSpace,width,height);
   bg = applyVoronoi(cells,inc);
   noSmooth();
-  
+  noCursor();
 }
 
 function draw() {
@@ -34,8 +38,15 @@ function draw() {
     else {cells[i].run(m.copy(),true);}
   }
   bg = applyVoronoi(cells,inc);
-  
-  bg = applyBlobs(blobs,inc,bg);
+  for (i=0; i<3; i++) {
+    bg = applyBlobs(blobs[i],inc,bg,colors[i]);
+  }
+  drawCursor();
+}
+
+function drawCursor() {
+  stroke(curColor);strokeWeight(20);
+  point(mouseX,mouseY);
 }
 
 function initCells(minD, maxD, maxX, maxY) {
@@ -69,19 +80,33 @@ function initCells(minD, maxD, maxX, maxY) {
   print(tries);
 }
 
+function initColors() {
+  colorMode(RGB);
+  curColorInd = 0;
+  colors = [color(255,0,0),color(0,255,0),color(0,0,255)];
+  curColor = colors[curColorInd];
+}
+
 function mousePressed() {
   let m = createVector(mouseX,mouseY);
   let clstCell = cells[closestCell(m)];
-  append(blobs,new Blob(clstCell));
-  print(blobs.length);
-  //me = !me;
+  append(blobs[curColorInd],new Blob(clstCell));
 }
 
 function mouseDragged() {
   mousePressed();
 }
 
-
+function keyPressed() {
+  print(keyCode);
+  if (keyCode == 84) { // t - change type
+    curColorInd++;
+    if (curColorInd>=colors.length) {
+      curColorInd=0;
+    }
+    curColor=colors[curColorInd];
+  }
+}
 
 function applyVoronoi(cs,inc,from) {
   colorMode(RGB);
@@ -111,7 +136,7 @@ function applyVoronoi(cs,inc,from) {
   return img;
 }
 
-function applyBlobs(bs,inc,from) {
+function applyBlobs(bs,inc,from, c) {
   colorMode(RGB);
   let img = createImage(int(width/inc),int(height/inc));
   if (from!=null) {img = from;}
@@ -128,7 +153,6 @@ function applyBlobs(bs,inc,from) {
         if (d>0) {total+=bs[i].cell.life/pow(d,2);}
       }
       if (total>1) {
-        let c = color(255,0,0);
         writeColor(img, int(x/inc), int(y/inc), c);
       }
     }
