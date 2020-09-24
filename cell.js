@@ -5,6 +5,7 @@ class Cell {
     this.color = color(random(40,120),random(120,190));
     this.offset = createVector();
     this.vel = createVector();
+    this.life = 0;
   }
   
   draw(w) {
@@ -26,13 +27,14 @@ class Cell {
     let aPos = this.absPos();
     let toM = m.copy().sub(aPos);
     if (!repel) {
-      let addVel = toM.copy();
-      addVel.mult(0.01);
-      this.vel.add(addVel);
+      //let addVel = toM.copy();
+      //addVel.mult(0.0001);
+      //this.vel.add(addVel);
+      this.vel.mult(0);
     }
     else {
       let d = toM.mag();
-      let osMag = width/pow(d,0.5)/6;
+      let osMag = minSpace*32/pow(d,1);
       osMag = min(osMag,width);
       if (repel) {
         osMag*=-1;
@@ -41,6 +43,6 @@ class Cell {
       this.offset.add(toM);
     }
     this.offset.mult(0.9);
-    this.vel.mult(0.9);
+    this.vel.mult(0.97);
   }
 }
