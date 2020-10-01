@@ -1,21 +1,25 @@
 let cells =[];
 let blobs = [[],[],[]];
 let maxSpace = 2000;
-let minSpace = 100;
-let inc = 12; // affects resolution of voronoi image
+let minSpace = 25;
+let inc = 10; // affects resolution of voronoi image
 let bg;
 var showCellNuc = false;
 var manhattanDistances = false;
 var curColor;
 var curColorInd = 0;
 var colors;
+var cursorRot = 0;
+var sinceLast = 0;
+var lastCellAddedTo;
 
 function setup() {
   initColors();
-  createCanvas(1280, 720);
+  createCanvas(windowWidth, windowHeight);
   //createCanvas(640, 480);
   initCells(minSpace,maxSpace,width,height);
-  bg = applyVoronoi(cells,inc);
+  bg = applyBlank(inc,bg);
+  //bg = applyVoronoi(cells,inc);
   noSmooth();
   noCursor();
 }
@@ -23,8 +27,11 @@ function setup() {
 function draw() {
   frameRate(30);
   colorMode(RGB);
-  background(128);
-  image(bg,0,0,width,height);
+  //background(128);
+  bg.filter(BLUR,1);
+  bg.resize(width,height);
+  bg.filter(THRESHOLD,0.9);
+  image(bg,0,0);
   
   let m = createVector(mouseX,mouseY);
   
@@ -37,11 +44,15 @@ function draw() {
     if (i==clstInd) {cells[i].run(m.copy(), false);}
     else {cells[i].run(m.copy(),true);}
   }
-  bg = applyVoronoi(cells,inc);
+  //bg = applyVoronoi(cells,inc);
+  bg = applyBlank(inc);
   for (i=0; i<3; i++) {
     bg = applyBlobs(blobs[i],inc,bg,colors[i]);
   }
   drawCursor();
+  cursorRot+=random(2);
+  //filter(BLUR,5);
+  sinceLast++;
 }
 
 function drawCursor() {
@@ -77,7 +88,6 @@ function initCells(minD, maxD, maxX, maxY) {
     }
     tries++;
   }
-  print(tries);
 }
 
 function initColors() {
@@ -90,7 +100,17 @@ function initColors() {
 function mousePressed() {
   let m = createVector(mouseX,mouseY);
   let clstCell = cells[closestCell(m)];
+  let last = lastCellAddedTo;
+  lastCellAddedTo = clstCell;
+  if (clstCell == last && sinceLast<5) {return;}
+  clstCell.life+=100;
+  for (var i=0; i<blobs.length; i++) {
+    if (blobs[i].cell==clstCell) {
+      return;
+    }
+  }
   append(blobs[curColorInd],new Blob(clstCell));
+  sinceLast = 0;
 }
 
 function mouseDragged() {
@@ -136,6 +156,20 @@ function applyVoronoi(cs,inc,from) {
   return img;
 }
 
+function applyBlank(inc,from) {
+  colorMode(RGB);
+  let img = createImage(int(width/inc),int(height/inc));
+  if (from!=null) {img = from;}
+  img.loadPixels();
+  for (var y=0; y<height; y+=inc) {
+    for (var x=0; x<width; x+=inc) {
+      writeColor(img, int(x/inc), int(y/inc), color(255));
+    }
+  }
+  img.updatePixels();
+  return img;
+}
+
 function applyBlobs(bs,inc,from, c) {
   colorMode(RGB);
   let img = createImage(int(width/inc),int(height/inc));
@@ -149,9 +183,10 @@ function applyBlobs(bs,inc,from, c) {
       var total = 0;
       for (var i=0; i<bs.length; i++) {
         let bp = bs[i].cell.absPos();
-        let d = cellDist(vec,bp);
-        if (d>0) {total+=bs[i].cell.life/pow(d,2);}
+        let d = blobDist(vec,bp);
+        if (d>0) {total+=(pow(bs[i].cell.life,1)/pow(d,1))*0.2;}
       }
+      total/=pow(bs.length,0.5);
       if (total>1) {
         writeColor(img, int(x/inc), int(y/inc), c);
       }
@@ -203,12 +238,18 @@ function manhattanDist(v1, v2) {
   return abs(v2.x-v1.x)+abs(v2.y-v1.y);
 }
 
-function weirdDist(v1,v2) {
-  let dx = v2.x-v1.x;
-  let dy = v2.y-v1.y;
-  return 2;
+function minkowskiDist(v1,v2,p) {
+  let d1 = abs(pow(v1.x-v2.x,p));
+  let d2 = abs(pow(v1.y-v2.y,p));
+  return pow(d1+d2,1/p);
 }
+
 function cellDist(v1,v2) {
-  if (manhattanDistances) {return manhattanDist(v1,v2);}
-  return v1.dist(v2);
+  return minkowskiDist(v1,v2,2);
+  //if (manhattanDistances) {return manhattanDist(v1,v2);}
+  //return v1.dist(v2);
+}
+
+function blobDist(v1,v2) {
+  return minkowskiDist(v1,v2,2);
 }

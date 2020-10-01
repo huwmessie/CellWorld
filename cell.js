@@ -5,7 +5,7 @@ class Cell {
     this.color = color(random(40,120),random(120,190));
     this.offset = createVector();
     this.vel = createVector();
-    this.life = 1000;
+    this.life = 0;
   }
   
   draw(w) {
@@ -30,11 +30,14 @@ class Cell {
       //let addVel = toM.copy();
       //addVel.mult(0.0001);
       //this.vel.add(addVel);
-      this.vel.mult(0);
+      //this.vel.mult(0);
+      let crsVec = createVector(0,1);
+      crsVec.rotate(cursorRot/18);
+      this.vel.add(crsVec);
     }
     else {
       let d = toM.mag();
-      let osMag = minSpace*32/pow(d,1);
+      let osMag = pow(minSpace,2)/pow(d,1);
       osMag = min(osMag,width);
       if (repel) {
         osMag*=-1;
